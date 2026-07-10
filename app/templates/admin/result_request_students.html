@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Students - {{ req.level }} {{ req.department }}</h1>
+<p class="text-muted">Session: {{ req.session.name }} | Semester: {{ req.semester }}</p>
+
+<div class="d-flex gap-2 mb-3">
+    <form method="POST" action="{{ url_for('admin.complete_result_request', request_id=req.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-success" type="submit">Mark Submission Approved</button>
+    </form>
+    <form method="POST" action="{{ url_for('admin.reject_result_request', request_id=req.id) }}" class="d-flex gap-2">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <textarea name="note" class="form-control" rows="2" placeholder="Reason for send back"></textarea>
+        <button class="btn btn-outline-danger" type="submit">Send Back To Advisor</button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if student_rows %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student</th>
+                            <th>Matric</th>
+                            <th class="text-center">Total Results</th>
+                            <th class="text-center">Pending</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in student_rows %}
+                            <tr>
+                                <td>{{ row.student.name }}</td>
+                                <td>{{ row.student.matric_no }}</td>
+                                <td class="text-center">{{ row.total_results }}</td>
+                                <td class="text-center">
+                                    {% if row.pending_results > 0 %}
+                                        <span class="badge bg-warning">{{ row.pending_results }} pending</span>
+                                    {% else %}
+                                        <span class="badge bg-success">All approved</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.view_result_request_student', request_id=req.id, student_id=row.student.id) }}">View Courses</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4 text-muted">No students found for this level/department.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

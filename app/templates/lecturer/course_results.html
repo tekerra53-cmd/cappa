@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Results for {{ course.code }} - {{ course.title }}</h1>
+<p>Session: {{ session.name }} - Semester: {{ course.semester }}</p>
+<form method="POST" class="row g-3">
+    {{ form.hidden_tag() }}
+    <div class="col-md-3"><label>Student</label><select class="form-select" name="student_id">{% for s in students %}<option value="{{ s.id }}">{{ s.matric_no }} - {{ s.name }}</option>{% endfor %}</select></div>
+    <div class="col-md-2">{{ form.attendance.label }}{{ form.attendance(class_='form-control', placeholder='0-10') }}</div>
+    <div class="col-md-2">{{ form.assignment.label }}{{ form.assignment(class_='form-control', placeholder='0-20') }}</div>
+    <div class="col-md-2">{{ form.test.label }}{{ form.test(class_='form-control', placeholder='0-20') }}</div>
+    <div class="col-md-2">{{ form.exam.label }}{{ form.exam(class_='form-control', placeholder='0-50') }}</div>
+    <div class="col-md-3 d-flex align-items-end">
+        {{ form.submit(class_='btn btn-success') }}
+    </div>
+</form>
+<table class="table mt-4"><thead><tr><th>Student</th><th>Attendance</th><th>Assignment</th><th>Test</th><th>Exam</th><th>Total</th><th>Grade</th><th>GP</th></tr></thead>
+<tbody>{% for r in results %}
+<tr><td>{{ r.student.name }}</td><td>{{ r.attendance }}</td><td>{{ r.assignment }}</td><td>{{ r.test }}</td><td>{{ r.exam }}</td><td>{{ r.total }}</td><td>{{ r.grade }}</td><td>{{ r.grade_point }}</td></tr>
+{% endfor %}</tbody></table>
+{% endblock %}

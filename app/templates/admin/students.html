@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Students</h1>
+<div class="row mb-3">
+    <div class="col-md-6">
+        <form method="GET" class="row g-2">
+            <div class="col-md-3">
+                <select class="form-select" name="level">
+                    <option value="">All Levels</option>
+                    {% for lvl in levels %}
+                        <option value="{{ lvl }}" {% if level_filter == lvl %}selected{% endif %}>{{ lvl }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" name="advisor">
+                    <option value="">All Advisors</option>
+                    {% for adv in advisors %}
+                        <option value="{{ adv.id }}" {% if advisor_filter == adv.id|string %}selected{% endif %}>{{ adv.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Search by name, matric or email" value="{{ search_query }}" />
+            </div>
+            <div class="col-md-2 d-flex align-items-center">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="show_all" value="1" id="showAllStudents" {% if show_all %}checked{% endif %}>
+                    <label class="form-check-label" for="showAllStudents">Show all</label>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-primary" type="submit">Filter/Search</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% if completed_requests %}
+<div class="alert alert-success">
+    <strong>Advisor submissions completed:</strong>
+    {% for req in completed_requests %}
+        <span class="ms-2">{{ req.advisor.username }} ({{ req.responded_at.strftime('%Y-%m-%d') if req.responded_at else '-' }})</span>
+    {% endfor %}
+</div>
+{% endif %}
+{% if advisor_filter and not can_view_list %}
+<div class="alert alert-warning">
+    You can only view a student list after the advisor submits it. Please request the list and wait for completion.
+</div>
+{% endif %}
+{% if not has_any_completed %}
+<div class="alert alert-warning">
+    <strong>No lecturer/advisor has sent student lists yet.</strong> Use the form below to request lists. Students will appear only after completion.
+</div>
+{% endif %}
+<div class="card mb-3">
+    <div class="card-header">
+        <h6 class="mb-0">Request Student List From Advisor</h6>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('admin.request_advisor_student_list') }}" class="row g-3">
+            {{ list_request_form.hidden_tag() }}
+            <div class="col-md-4">{{ list_request_form.advisor_id.label }}{{ list_request_form.advisor_id(class_='form-select') }}</div>
+            <div class="col-md-5">{{ list_request_form.note.label }}{{ list_request_form.note(class_='form-control', placeholder='Optional note') }}</div>
+            <div class="col-md-3 d-flex align-items-end">
+                {{ list_request_form.submit(class_='btn btn-primary') }}
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <h6 class="mb-0">Advisor Requests</h6>
+    </div>
+    <div class="card-body p-0">
+        {% if requests %}
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr><th>Advisor</th><th>Note</th><th>Status</th><th>Requested</th><th>Action</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for req in requests %}
+                            <tr>
+                                <td>{{ req.advisor.username }}</td>
+                                <td>{{ req.note or '-' }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'warning' if req.status == 'pending' else 'success' if req.status in ['approved', 'completed'] else 'secondary' }}">
+                                        {{ req.status|capitalize }}
+                                    </span>
+                                </td>
+                                <td>{{ req.requested_at.strftime('%Y-%m-%d') if req.requested_at else '-' }}</td>
+                                <td>
+                                    {% if req.status in ['approved', 'completed'] %}
+                                        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('admin.students', advisor=req.advisor_id) }}">View List</a>
+                                    {% if req.status == 'completed' %}
+                                        <a class="btn btn-sm btn-outline-success ms-1" href="{{ url_for('admin.export_advisor_students_csv', request_id=req.id) }}">Export CSV</a>
+                                    {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-3 text-muted">No requests yet.</div>
+        {% endif %}
+    </div>
+</div>
+{% if students %}
+<table class="table mt-3">
+    <thead>
+        <tr><th>Name</th><th>Matric</th><th>Email</th><th>Dept</th><th>Level</th><th>Advisor</th></tr>
+    </thead>
+    <tbody>
+        {% for s in students %}
+            <tr>
+                <td>
+                    <button class="btn btn-link p-0" data-bs-toggle="modal" data-bs-target="#studentDetails{{ s.id }}">
+                        {{ s.name }}
+                    </button>
+
+                    <div class="modal fade" id="studentDetails{{ s.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Student Details</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div><strong>Name:</strong> {{ s.name }}</div>
+                                    <div><strong>Matric:</strong> {{ s.matric_no }}</div>
+                                    <div><strong>Username:</strong> {{ s.user.username if s.user else 'N/A' }}</div>
+                                    <div><strong>Temp Password:</strong>
+                                        {% if s.temp_password %}
+                                            <span class="text-danger">{{ s.temp_password }}</span>
+                                            <div class="small text-muted mt-1">Visible until the student changes password.</div>
+                                        {% else %}
+                                            <span class="text-muted">Cleared after password change</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td>{{ s.matric_no }}</td>
+                <td>{{ s.user.email if s.user else 'N/A' }}</td>
+                <td>{{ s.department }}</td>
+                <td>{{ s.level }}</td>
+                <td>{{ (advisor_map.get(s.level) or ['-']) | join(', ') }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="alert alert-info mt-3">
+    No students to display. Request and wait for advisor submissions.
+</div>
+{% endif %}
+{% endblock %}

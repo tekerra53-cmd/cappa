@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>{{ student.name }} ({{ student.matric_no }})</h1>
+<p class="text-muted">Level {{ student.level }} | {{ student.department }} | Session {{ req.session.name }} | Semester {{ req.semester }}</p>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if results %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Course</th>
+                            <th class="text-center">Total</th>
+                            <th class="text-center">Grade</th>
+                            <th class="text-center">GP</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in results %}
+                            <tr>
+                                <td>{{ r.course.code }} - {{ r.course.title }}</td>
+                                <td class="text-center">{{ r.total }}</td>
+                                <td class="text-center">{{ r.grade }}</td>
+                                <td class="text-center">{{ r.grade_point }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-{{ 'success' if r.approval_status == 'approved' else 'warning' if r.approval_status == 'pending' else 'secondary' }}">
+                                        {{ r.approval_status|capitalize }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    {% if r.approval_status == 'pending' %}
+                                        <form method="POST" action="{{ url_for('admin.approve_result', result_id=r.id) }}" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button class="btn btn-sm btn-outline-success" type="submit">Approve</button>
+                                        </form>
+                                        <form method="POST" action="{{ url_for('admin.reject_result', result_id=r.id) }}" class="d-inline ms-1">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="note" value="Needs correction">
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">Send Back</button>
+                                        </form>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4 text-muted">No results found.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

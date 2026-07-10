@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Resit Requests - Level {{ level }}</h1>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if requests %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student</th>
+                            <th>Matric</th>
+                            <th>Course</th>
+                            <th>Requested</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in requests %}
+                            <tr>
+                                <td>{{ req.student.name }}</td>
+                                <td>{{ req.student.matric_no }}</td>
+                                <td>{{ req.course.code }} - {{ req.course.title }}</td>
+                                <td>{{ req.requested_at.strftime('%Y-%m-%d') if req.requested_at else '-' }}</td>
+                                <td class="text-center">
+                                    <form method="POST" action="{{ url_for('lecturer.approve_resit_request', request_id=req.id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button class="btn btn-sm btn-success" type="submit">Approve</button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('lecturer.reject_resit_request', request_id=req.id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Reject</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4 text-muted">No pending resit requests.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Users</h1>
+<form method="GET" class="row g-3 mb-3">
+    <div class="col-md-6">
+        <input type="text" name="q" class="form-control" placeholder="Search lecturers by username or email" value="{{ search_query }}" />
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-outline-primary" type="submit">Search</button>
+    </div>
+    <div class="col-md-2">
+        <a class="btn btn-outline-secondary" href="{{ url_for('admin.user_list') }}">Clear</a>
+    </div>
+</form>
+<form method="POST" class="row g-3">
+    {{ form.hidden_tag() }}
+    <div class="col-md-3">{{ form.username.label }}{{ form.username(class_='form-control') }}</div>
+    <div class="col-md-3">{{ form.email.label }}{{ form.email(class_='form-control') }}</div>
+    <div class="col-md-2">{{ form.password.label }}{{ form.password(class_='form-control') }}</div>
+    <div class="col-md-2">{{ form.role.label }}{{ form.role(class_='form-select') }}</div>
+    <div class="col-md-2 mt-4">{{ form.submit(class_='btn btn-success') }}</div>
+</form>
+<div class="card mt-4">
+    <div class="card-header">
+        <h6 class="mb-0">Assign Course Advisor</h6>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('admin.assign_advisor') }}" class="row g-3">
+            {{ advisor_form.hidden_tag() }}
+            <div class="col-md-4">{{ advisor_form.lecturer_id.label }}{{ advisor_form.lecturer_id(class_='form-select') }}</div>
+            <div class="col-md-3">{{ advisor_form.level.label }}{{ advisor_form.level(class_='form-control', placeholder='e.g. 300') }}</div>
+            <div class="col-md-3 d-flex align-items-end">
+                <small class="text-muted">Leave level empty to remove advisor role.</small>
+            </div>
+            <div class="col-md-2 mt-4">{{ advisor_form.submit(class_='btn btn-primary') }}</div>
+        </form>
+    </div>
+</div>
+<table class="table mt-3">
+    <thead><tr><th>Username</th><th>Email</th><th>Role</th><th>Advisor Level</th></tr></thead>
+    <tbody>
+        {% for u in users %}
+            <tr>
+                <td>{{ u.username }}</td>
+                <td>{{ u.email }}</td>
+                <td>{{ u.role }}</td>
+                <td>{{ u.advisor_level if u.is_advisor else '-' }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

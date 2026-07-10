@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Result Approval Requests</h1>
+
+<form method="get" class="row g-3 mb-3">
+  <div class="col-md-3">
+    <select class="form-select" name="session">
+      <option value="">All Sessions</option>
+      {% for s in sessions %}
+      <option value="{{ s.name }}" {% if session_name == s.name %}selected{% endif %}>{{ s.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2">
+    <select class="form-select" name="level">
+      <option value="">All Levels</option>
+      {% for level in levels %}
+      <option value="{{ level }}" {% if level_filter == level %}selected{% endif %}>{{ level }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-3">
+    <select class="form-select" name="department">
+      <option value="">All Departments</option>
+      {% for d in departments %}
+      <option value="{{ d }}" {% if department_filter == d %}selected{% endif %}>{{ d }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2">
+    <select class="form-select" name="status">
+      <option value="advisor_submitted" {% if status == 'advisor_submitted' %}selected{% endif %}>From Advisor</option>
+      <option value="admin_approved" {% if status == 'admin_approved' %}selected{% endif %}>Approved</option>
+      <option value="rejected" {% if status == 'rejected' %}selected{% endif %}>Rejected</option>
+    </select>
+  </div>
+  <div class="col-md-2">
+    <button class="btn btn-primary w-100" type="submit">Filter</button>
+  </div>
+</form>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Advisor</th>
+      <th>Level</th>
+      <th>Department</th>
+      <th>Session/Semester</th>
+      <th>Status</th>
+      <th>Submitted</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for req in requests %}
+    <tr>
+      <td>{{ req.advisor.username }}</td>
+      <td>{{ req.level }}</td>
+      <td>{{ req.department }}</td>
+      <td>{{ req.session.name }} / {{ req.semester }}</td>
+      <td>
+        <span class="badge bg-{{ 'warning' if req.status == 'advisor_submitted' else 'success' if req.status == 'admin_approved' else 'secondary' }}">
+          {{ req.status|replace('_',' ')|title }}
+        </span>
+      </td>
+      <td>{{ req.submitted_at.strftime('%Y-%m-%d') }}</td>
+      <td>
+        <a href="{{ url_for('admin.view_result_request', request_id=req.id) }}" class="btn btn-sm btn-primary">Review Students</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

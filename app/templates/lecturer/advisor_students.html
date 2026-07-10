@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>My Students ({{ students|length }}) - Level {{ level }}</h1>
+<form method="GET" class="row g-3 mb-3">
+    <div class="col-md-6">
+        <input type="text" name="q" class="form-control" placeholder="Search by name, matric or email" value="{{ search_query }}" />
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-outline-primary" type="submit">Search</button>
+    </div>
+    <div class="col-md-2">
+        <a class="btn btn-outline-secondary" href="{{ url_for('lecturer.advisor_students') }}">Clear</a>
+    </div>
+</form>
+<div class="table-responsive">
+<table class="table">
+    <thead>
+        <tr><th>Name</th><th>Matric</th><th>Email</th><th>Department</th></tr>
+    </thead>
+    <tbody>
+        {% for s in students %}
+            <tr>
+                <td><a href="#" class="student-detail" data-name="{{ s.name }}" data-username="{{ s.user.username if s.user else 'N/A' }}" data-email="{{ s.user.email if s.user else 'N/A' }}" data-temp-password="{{ s.temp_password or 'Changed' }}"> {{ s.name }} </a></td>
+                <td>{{ s.matric_no }}</td>
+                <td>{{ s.user.email if s.user else 'N/A' }}</td>
+                <td>{{ s.department }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% if not students %}
+<div class="alert alert-info">No students yet. <a href="{{ url_for('lecturer.create_student_route') }}">Create some</a>.</div>
+{% endif %}
+<a href="{{ url_for('lecturer.dashboard') }}" class="btn btn-secondary mt-3">Back to Dashboard</a>
+        <!-- Modal for student login details -->
+        <div class="modal fade" id="studentModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Login Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Name:</strong> <span id="modal-name"></span></p>
+                        <p><strong>Username:</strong> <span id="modal-username"></span></p>
+                        <p><strong>Password:</strong> <span id="modal-password">Student123! (change on first login)</span></p>
+                        <p><strong>Email:</strong> <span id="modal-email"></span></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const links = document.querySelectorAll('.student-detail');
+    links.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('modal-name').textContent = this.dataset.name;
+            document.getElementById('modal-username').textContent = this.dataset.username;
+            document.getElementById('modal-email').textContent = this.dataset.email;
+            document.getElementById('modal-password').textContent = this.dataset.tempPassword || 'Password changed';
+            const modal = new bootstrap.Modal(document.getElementById('studentModal'));
+            modal.show();
+        });
+    });
+});
+        </script>
+{% endblock %}

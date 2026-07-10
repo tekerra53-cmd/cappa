@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Courses</h1>
+<form method="POST" class="row g-3">
+    {{ form.hidden_tag() }}
+    <div class="col-md-2">{{ form.code.label }}{{ form.code(class_='form-control') }}</div>
+    <div class="col-md-3">{{ form.title.label }}{{ form.title(class_='form-control') }}</div>
+    <div class="col-md-1">{{ form.unit.label }}{{ form.unit(class_='form-control') }}</div>
+    <div class="col-md-1">{{ form.semester.label }}{{ form.semester(class_='form-select') }}</div>
+    <div class="col-md-1">{{ form.level.label }}{{ form.level(class_='form-control') }}</div>
+    <div class="col-md-2">{{ form.lecturer_id.label }}{{ form.lecturer_id(class_='form-select') }}</div>
+    <div class="col-md-2 mt-4">{{ form.submit(class_='btn btn-success') }}</div>
+</form>
+<table class="table mt-3"><thead><tr><th>Code</th><th>Title</th><th>Unit</th><th>Semester</th><th>Level</th><th>Lecturer</th></tr></thead><tbody>{% for c in courses %}<tr><td>{{ c.code }}</td><td>{{ c.title }}</td><td>{{ c.unit }}</td><td>{{ c.semester }}</td><td>{{ c.level }}</td><td>{{ c.lecturer.username if c.lecturer else 'Unassigned' }}</td></tr>{% endfor %}</tbody></table>
+{% endblock %}

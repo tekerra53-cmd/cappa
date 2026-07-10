@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Student List Requests</h1>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if requests %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Admin</th>
+                            <th>Note</th>
+                            <th>Requested</th>
+                            <th>Status</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in requests %}
+                            <tr>
+                                <td>{{ req.admin.username }}</td>
+                                <td>{{ req.note or '-' }}</td>
+                                <td>{{ req.requested_at.strftime('%Y-%m-%d') if req.requested_at else '-' }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'warning' if req.status == 'pending' else 'success' if req.status in ['approved', 'completed'] else 'secondary' }}">
+                                        {{ req.status|capitalize }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    {% if req.status == 'pending' %}
+                                        <form method="POST" action="{{ url_for('lecturer.approve_list_request', request_id=req.id) }}" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button class="btn btn-sm btn-success" type="submit">Approve</button>
+                                        </form>
+                                        <form method="POST" action="{{ url_for('lecturer.reject_list_request', request_id=req.id) }}" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button class="btn btn-sm btn-outline-danger" type="submit">Reject</button>
+                                        </form>
+                                    {% elif req.status == 'approved' %}
+                                        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('lecturer.export_advisor_students_csv', request_id=req.id) }}">Download CSV</a>
+                                        <form method="POST" action="{{ url_for('lecturer.complete_list_request', request_id=req.id) }}" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button class="btn btn-sm btn-primary" type="submit">Submit List</button>
+                                        </form>
+                                    {% elif req.status == 'completed' %}
+                                        <a class="btn btn-sm btn-outline-primary" href="{{ url_for('lecturer.export_advisor_students_csv', request_id=req.id) }}">Download CSV</a>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4 text-muted">No student list requests.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

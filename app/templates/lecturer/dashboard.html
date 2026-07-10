@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Lecturer Dashboard</h1>
+
+{% if notifications %}
+<div class="card mb-3">
+    <div class="card-header">
+        <h6 class="mb-0">Notifications</h6>
+    </div>
+    <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+            {% for n in notifications %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>{{ n.message }}</span>
+                    {% if n.link %}
+                        <a class="btn btn-sm btn-outline-primary" href="{{ n.link }}">View</a>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+
+{% if current_user.is_advisor %}
+<div class="card mb-3">
+    <div class="card-body text-center">
+        <h5>Advisor Tools (Level {{ current_user.advisor_level }})</h5>
+        <a href="{{ url_for('lecturer.create_student_route') }}" class="btn btn-success me-2">Create Student</a>
+        <a href="{{ url_for('lecturer.advisor_students') }}" class="btn btn-info me-2">View Students</a>
+        <a href="{{ url_for('lecturer.advisor_requests') }}" class="btn btn-outline-primary me-2">Resit Requests</a>
+        <a href="{{ url_for('lecturer.advisor_results') }}" class="btn btn-outline-info">View Results</a>
+        <a href="{{ url_for('lecturer.advisor_list_requests') }}" class="btn btn-outline-warning">List Requests</a>
+    </div>
+</div>
+{% endif %}
+<table class="table"><thead><tr><th>Course</th><th>Action</th></tr></thead><tbody>{% for c in courses %}
+<tr><td>{{ c.code }} - {{ c.title }}</td><td><a href="{{ url_for('lecturer.course_results', course_id=c.id) }}" class="btn btn-sm btn-primary">Enter Results</a></td></tr>{% endfor %}</tbody></table>
+{% endblock %}
