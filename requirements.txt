@@ -4,7 +4,6 @@ Flask-WTF
 email_validator
 Flask-Migrate
 Flask-SQLAlchemy
-mysqlclient
 Werkzeug
 Faker
 pytest
