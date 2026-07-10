@@ -6,6 +6,7 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).parent.parent
 INSTANCE_DIR = BASE_DIR / 'instance'
+SERVERLESS_DB_PATH = Path('/tmp') / 'cappa_app.db'
 
 
 def _resolve_db_path():
@@ -13,8 +14,6 @@ def _resolve_db_path():
     if database_url.startswith('sqlite:///'):
         sqlite_path = database_url[len('sqlite:///'):]
         if sqlite_path.startswith('/'):
-            if sqlite_path.startswith('/tmp/') or sqlite_path.startswith('/var/') or sqlite_path.startswith('/app/'):
-                return Path(sqlite_path)
             return Path(sqlite_path)
         if ':' in sqlite_path and len(sqlite_path.split(':')) == 2:
             return (INSTANCE_DIR / 'app.db').resolve()
@@ -26,6 +25,9 @@ def _resolve_db_path():
         if not db_path.is_absolute():
             db_path = (BASE_DIR / db_path).resolve()
         return db_path
+
+    if os.environ.get('VERCEL') or os.environ.get('RENDER') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'):
+        return SERVERLESS_DB_PATH
 
     return (INSTANCE_DIR / 'app.db').resolve()
 
