@@ -3,6 +3,22 @@ from .config import Config
 from .extensions import db, migrate, login_manager, csrf
 
 
+def _init_database(app):
+    with app.app_context():
+        db.create_all()
+
+        from .models.user import User
+
+        if not User.query.filter_by(role='admin').first():
+            admin = User()
+            admin.username = 'admin'
+            admin.email = 'admin@srms.local'
+            admin.role = 'admin'
+            admin.set_password('admin123')
+            db.session.add(admin)
+            db.session.commit()
+
+
 def create_app(config_class=Config):
     app = Flask(__name__, template_folder='templates', static_folder='static')
     app.config.from_object(config_class)
@@ -29,6 +45,8 @@ def create_app(config_class=Config):
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(lecturer_bp, url_prefix='/lecturer')
     app.register_blueprint(student_bp, url_prefix='/student')
+
+    _init_database(app)
 
     @app.route('/')
     def index():
