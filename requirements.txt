@@ -9,3 +9,4 @@ Werkzeug
 Faker
 pytest
 python-dotenv
+gunicorn
