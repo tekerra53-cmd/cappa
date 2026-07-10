@@ -14,6 +14,8 @@ def _resolve_db_path():
         sqlite_path = database_url[len('sqlite:///'):]
         if sqlite_path.startswith('/'):
             return Path(sqlite_path)
+        if ':' in sqlite_path and len(sqlite_path.split(':')) == 2:
+            return (INSTANCE_DIR / 'app.db').resolve()
         return (BASE_DIR / sqlite_path).resolve()
 
     env_db_path = os.environ.get('APP_DB_PATH', '').strip()
