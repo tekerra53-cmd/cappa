@@ -1,9 +1,14 @@
+import os
+
 from flask import Flask, redirect, url_for
 from .config import Config
 from .extensions import db, migrate, login_manager, csrf
 
 
 def _init_database(app):
+    if app.config.get('TESTING', False) or os.environ.get('PYTEST_CURRENT_TEST'):
+        return
+
     with app.app_context():
         db.create_all()
 
@@ -49,7 +54,10 @@ def create_app(config_class=Config):
     app.register_blueprint(lecturer_bp, url_prefix='/lecturer')
     app.register_blueprint(student_bp, url_prefix='/student')
 
-    _init_database(app)
+    # Initialize database and demo data. Skip demo seeding when testing to
+    # avoid interfering with unit tests that expect a clean database.
+    if not app.config.get('TESTING', False):
+        _init_database(app)
 
     @app.route('/')
     def index():

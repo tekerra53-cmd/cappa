@@ -9,11 +9,11 @@ def get_student_by_user(user_id):
 
 def get_student_results(student_id, session_name=None, semester=None):
     query = Result.query.filter_by(student_id=student_id)
-    query = query.filter(Result.approval_status == 'approved')
+    query = query.filter((Result.approval_status == 'approved') | (Result.is_approved.is_(True)))
     if session_name:
         session = AcademicSession.query.filter_by(name=session_name).first()
         if session:
             query = query.filter_by(session_id=session.id)
     if semester:
         query = query.filter_by(semester=semester)
-    return query.all()
+    return query.order_by(Result.id).all()
