@@ -18,6 +18,9 @@ def _init_database(app):
             db.session.add(admin)
             db.session.commit()
 
+        from seed import _ensure_demo_accounts
+        _ensure_demo_accounts(app)
+
 
 def create_app(config_class=Config):
     app = Flask(__name__, template_folder='templates', static_folder='static')

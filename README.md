@@ -70,8 +70,8 @@ run.py                      # App entry point
    ```
 
 ## Default Credentials (after seeding)
-- **Admin**: admin / admin123
-- **Lecturers/Students**: Any generated username / pass123
+- **Admin**: admin / 123456
+- **Lecturers/Students**: Any generated username / 123456
 
 ## Endpoints
 - `/` -> redirects based on role
@@ -87,7 +87,13 @@ pytest
 ```
 
 ## Notes
-- Uses SQLite by default, configure `DATABASE_URL` in `.env` for MySQL
+- Uses SQLite by default. For hosting, SQLite (especially on serverless platforms like Vercel, Render, or AWS Lambda) may be ephemeral and not shared across instances — resulting in non-persistent data across devices or deployments.
+- For persistent, cross-device data, configure an external database and set the `DATABASE_URL` environment variable (e.g. a managed PostgreSQL/MySQL instance). Example:
+
+```bash
+export DATABASE_URL='postgresql://user:password@host:5432/dbname'
+```
+
 - Change `SECRET_KEY` in `.env` for production
 - MySQL support via `mysqlclient` dependency
 
