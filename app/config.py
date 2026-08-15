@@ -1,6 +1,7 @@
 import os
 import re
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent.parent
@@ -61,6 +62,14 @@ def _build_sqlalchemy_uri(database_url):
             db_path = (BASE_DIR / sqlite_path).resolve()
         db_path.parent.mkdir(exist_ok=True)
         return f'sqlite:///{db_path.as_posix()}'
+
+    if database_url.startswith('postgresql://'):
+        parsed = urllib.parse.urlparse(database_url)
+        valid_params = urllib.parse.parse_qsl(parsed.query)
+        cleaned_params = [(k, v) for k, v in valid_params if k.lower() not in {'supa', 'supabase', 'pooler', 'x'}]
+        cleaned_query = urllib.parse.urlencode(cleaned_params)
+        database_url = urllib.parse.urlunparse(parsed._replace(query=cleaned_query))
+
     return database_url
 
 
