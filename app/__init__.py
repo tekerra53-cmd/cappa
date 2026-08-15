@@ -23,8 +23,14 @@ def _init_database(app):
             db.session.add(admin)
             db.session.commit()
 
-        from seed import _ensure_demo_accounts
-        _ensure_demo_accounts(app)
+        if os.environ.get('VERCEL'):
+            return
+
+        try:
+            from seed import _ensure_demo_accounts
+            _ensure_demo_accounts(app)
+        except Exception:
+            pass
 
 
 def create_app(config_class=Config):
