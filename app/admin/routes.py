@@ -178,8 +178,20 @@ def courses():
             return redirect(url_for('admin.courses'))
         except Exception as e:
             flash(str(e), 'danger')
+    else:
+        # If user submitted the form but validation failed, surface first error to the admin
+        if request.method == 'POST':
+            for error in form.errors.values():
+                if error:
+                    flash(error[0], 'danger')
+                    break
 
     courses = Course.query.all()
+    try:
+        from flask import current_app
+        current_app.logger.info(f'Admin courses view fetched {len(courses)} courses')
+    except Exception:
+        pass
     return render_template('admin/courses.html', courses=courses, form=form)
 
 
