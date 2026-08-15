@@ -9,6 +9,12 @@ from ..extensions import db
 
 
 def create_user(username, email, password, role):
+    # Validate uniqueness to provide clearer errors to the caller
+    if User.query.filter_by(username=username).first():
+        raise ValueError('Username already exists')
+    if User.query.filter_by(email=email).first():
+        raise ValueError('Email already exists')
+
     u = User(username=username, email=email, role=role)
     u.set_password(password)
     db.session.add(u)
