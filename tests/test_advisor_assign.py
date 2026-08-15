@@ -14,7 +14,7 @@ def app():
         db.drop_all()
         db.create_all()
         admin = User(username='testadmin', email='testadmin@test.com', role='admin')
-        admin.set_password('admin123')
+        admin.set_password('123456')
         db.session.add(admin)
         
         lecturer = User(username='test.lecturer', email='lecturer@test.com', role='lecturer')
@@ -49,7 +49,7 @@ def test_advisor_assignment(client, app):
         
         login_resp = client.post('/login', data={
             'username': 'testadmin',
-            'password': 'admin123',
+            'password': '123456',
             'csrf_token': csrf_token
         })
         assert login_resp.status_code == 302, f"Login failed: {login_resp.status_code}"

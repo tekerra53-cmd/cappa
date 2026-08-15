@@ -28,7 +28,7 @@ def _init_database(app):
                 admin.username = 'admin'
                 admin.email = 'admin@srms.local'
                 admin.role = 'admin'
-                admin.set_password('admin123')
+                admin.set_password('123456')
                 db.session.add(admin)
                 db.session.commit()
                 logger.info('Default admin user created')

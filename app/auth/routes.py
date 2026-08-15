@@ -76,8 +76,8 @@ def init_admin():
         return redirect(url_for('auth.login'))
 
     admin = User(username='admin', email='admin@srms.local', role='admin')
-    admin.set_password('admin123')
+    admin.set_password('123456')
     db.session.add(admin)
     db.session.commit()
-    flash('Default admin created: username admin password admin123', 'success')
+    flash('Default admin created: username admin password 123456', 'success')
     return redirect(url_for('auth.login'))
