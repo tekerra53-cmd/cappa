@@ -18,11 +18,11 @@ def _init_database(app):
             logger.info('Database tables created/verified')
         except Exception as e:
             logger.error(f'Database create_all failed: {e}')
-            raise
-
-        from .models.user import User
+            return
 
         try:
+            from .models.user import User
+
             if not User.query.filter_by(role='admin').first():
                 admin = User()
                 admin.username = 'admin'
@@ -35,7 +35,7 @@ def _init_database(app):
         except Exception as e:
             logger.error(f'Admin user creation failed: {e}')
             db.session.rollback()
-            raise
+            return
 
         if os.environ.get('VERCEL'):
             logger.info('Vercel environment detected, skipping demo seeding')
