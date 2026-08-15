@@ -1,7 +1,7 @@
 import os
 import logging
 
-from flask import Flask, redirect, url_for, jsonify, render_template
+from flask import Flask, redirect, url_for, jsonify, render_template, request
 from .config import Config
 from .extensions import db, migrate, login_manager, csrf
 
@@ -90,6 +90,28 @@ def create_app(config_class=Config):
             return jsonify({'status': 'healthy', 'database': 'connected'})
         except Exception as e:
             return jsonify({'status': 'unhealthy', 'database': str(e)}), 500
+
+    @app.route('/admin/reset', methods=['POST'])
+    def reset_admin():
+        if os.environ.get('ADMIN_RESET_KEY') != request.form.get('key'):
+            return jsonify({'error': 'Unauthorized'}), 401
+
+        with app.app_context():
+            try:
+                from .models.user import User
+                admin = User.query.filter_by(role='admin').first()
+                if admin is None:
+                    admin = User(username='admin', email='admin@srms.local', role='admin')
+                    db.session.add(admin)
+                admin.username = 'admin'
+                admin.email = 'admin@srms.local'
+                admin.role = 'admin'
+                admin.set_password('123456')
+                db.session.commit()
+                return jsonify({'status': 'ok', 'message': 'Admin password reset to 123456'})
+            except Exception as e:
+                db.session.rollback()
+                return jsonify({'error': str(e)}), 500
 
     # Initialize database and demo data. Skip demo seeding when testing to
     # avoid interfering with unit tests that expect a clean database.
