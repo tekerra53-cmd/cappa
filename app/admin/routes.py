@@ -189,23 +189,15 @@ def courses():
                     break
 
     courses = Course.query.all()
-    # Debug info: total lecturer count and newest lecturer IDs
-    lecturer_query = User.query.filter(User.role.ilike('%lecturer%')).order_by(User.id.desc())
-    lecturer_count = lecturer_query.count()
-    newest_lecturer_ids = [u.id for u in lecturer_query.limit(5).all()]
     try:
         current_app.logger.info(f'Admin courses view fetched {len(courses)} courses')
     except Exception:
-        # Logging shouldn't break the view; ignore if logger isn't available
         pass
-    # Pass lecturer choices and debug info for the template
     return render_template(
         'admin/courses.html',
         courses=courses,
         form=form,
-        lecturer_choices=lecturers,
-        lecturer_count=lecturer_count,
-        newest_lecturer_ids=newest_lecturer_ids
+        lecturer_choices=lecturers
     )
 
 
