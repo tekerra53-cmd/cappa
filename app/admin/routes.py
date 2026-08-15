@@ -58,7 +58,7 @@ def user_list():
             flash(str(e), 'danger')
 
     search_query = request.args.get('q', '').strip()
-    users_query = User.query.filter_by(role='lecturer')
+    users_query = User.query.filter(User.role.ilike('%lecturer%'))
     if search_query:
         users_query = users_query.filter(
             or_(
@@ -68,7 +68,7 @@ def user_list():
         )
     users = users_query.order_by(User.username).all()
     advisor_form = AdvisorAssignForm()
-    lecturers = User.query.filter_by(role='lecturer').order_by(User.username).all()
+    lecturers = User.query.filter(User.role.ilike('%lecturer%')).order_by(User.username).all()
     advisor_form.lecturer_id.choices = [(u.id, u.username) for u in lecturers]
     return render_template('admin/users.html', users=users, form=form, advisor_form=advisor_form, search_query=search_query)
 
@@ -89,7 +89,7 @@ def students():
 
     query = Student.query
 
-    advisors = User.query.filter_by(role='lecturer', is_advisor=True).order_by(User.username).all()
+    advisors = User.query.filter(User.role.ilike('%lecturer%'), User.is_advisor == True).order_by(User.username).all()
     if not show_all:
         advisor_levels = [a.advisor_level for a in advisors if a.advisor_level]
         if advisor_levels:
@@ -169,7 +169,7 @@ def students():
 @admin_required
 def courses():
     form = CourseForm()
-    lecturers = [(u.id, u.username) for u in User.query.filter_by(role='lecturer').order_by(User.username).all()]
+    lecturers = [(u.id, u.username) for u in User.query.filter(User.role.ilike('%lecturer%')).order_by(User.username).all()]
     form.lecturer_id.choices = lecturers
 
     if form.validate_on_submit():
@@ -436,7 +436,7 @@ def reject_result(result_id):
 @admin_required
 def assign_advisor():
     form = AdvisorAssignForm()
-    lecturers = User.query.filter_by(role='lecturer').order_by(User.username).all()
+    lecturers = User.query.filter(User.role.ilike('%lecturer%')).order_by(User.username).all()
     form.lecturer_id.choices = [(u.id, u.username) for u in lecturers]
 
     if form.validate_on_submit():
@@ -471,7 +471,7 @@ def assign_advisor():
 @admin_required
 def request_advisor_student_list():
     form = AdvisorListRequestForm()
-    advisors = User.query.filter_by(role='lecturer', is_advisor=True).order_by(User.username).all()
+    advisors = User.query.filter(User.role.ilike('%lecturer%'), User.is_advisor == True).order_by(User.username).all()
     form.advisor_id.choices = [(u.id, u.username) for u in advisors]
 
     if form.validate_on_submit():
