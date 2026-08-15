@@ -1,4 +1,9 @@
 from ..extensions import db
+from typing import Optional, TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from .user import User
 
 
 class Course(db.Model):
@@ -10,3 +15,6 @@ class Course(db.Model):
     level = db.Column(db.String(10), nullable=False)
     lecturer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     results = db.relationship('Result', backref='course', lazy=True)
+    # Provide a typing-only annotation for the `lecturer` backref added by User.courses
+    if TYPE_CHECKING:  # pragma: no cover - typing only
+        lecturer: Optional["User"]

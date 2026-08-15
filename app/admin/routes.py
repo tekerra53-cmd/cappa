@@ -101,13 +101,14 @@ def students():
         query = query.filter_by(level=level_filter)
 
     if search_query:
-        query = query.filter(
-            or_(
-                Student.name.ilike(f"%{search_query}%"),
-                Student.matric_no.ilike(f"%{search_query}%"),
-                Student.user.has(User.email.ilike(f"%{search_query}%"))
+            # Join to User and search across student fields and user email
+            query = query.join(User, Student.user_id == User.id).filter(
+                or_(
+                    Student.name.ilike(f"%{search_query}%"),
+                    Student.matric_no.ilike(f"%{search_query}%"),
+                    User.email.ilike(f"%{search_query}%")
+                )
             )
-        )
 
     advisor_map = {}
     for adv in advisors:
@@ -183,14 +184,15 @@ def courses():
         if request.method == 'POST':
             for error in form.errors.values():
                 if error:
-                    flash(error[0], 'danger')
+                    msg = error[0] if isinstance(error, (list, tuple)) and len(error) > 0 else str(error)
+                    flash(str(msg), 'danger')
                     break
 
     courses = Course.query.all()
     try:
-        from flask import current_app
         current_app.logger.info(f'Admin courses view fetched {len(courses)} courses')
     except Exception:
+        # Logging shouldn't break the view; ignore if logger isn't available
         pass
     # Pass lecturer choices for debugging in the template
     return render_template('admin/courses.html', courses=courses, form=form, lecturer_choices=lecturers)
@@ -320,11 +322,11 @@ def reject_result_request(request_id):
     req.admin_id = current_user.id
     req.admin_approved_at = db.func.now()
     if req.advisor_id:
-        db.session.add(Notification(
-            user_id=req.advisor_id,
-            message=f"Result submission sent back ({req.level} {req.department}, {req.session.name} {req.semester}). Reason: {note}",
-            link=url_for('lecturer.advisor_results', session=req.session.name, semester=req.semester, department=req.department)
-        ))
+        n = Notification()
+        n.user_id = req.advisor_id
+        n.message = f"Result submission sent back ({req.level} {req.department}, {req.session.name} {req.semester}). Reason: {note}"
+        n.link = url_for('lecturer.advisor_results', session=req.session.name, semester=req.semester, department=req.department)
+        db.session.add(n)
     db.session.commit()
     flash('Submission sent back to advisor.', 'warning')
     return redirect(url_for('admin.result_requests', status='advisor_submitted'))
@@ -365,7 +367,10 @@ def reset_user_password(id):
 def activate_session_route(id):
     try:
         s = activate_session(id)
-        flash(f'Session {s.name} activated', 'success')
+        if s:
+            flash(f'Session {s.name} activated', 'success')
+        else:
+            flash('Session activation failed', 'danger')
     except Exception as e:
         flash(str(e), 'danger')
     return redirect(url_for('admin.sessions'))
@@ -381,18 +386,18 @@ def approve_result(result_id):
     res.rejection_reason = None
     res.approved_by = current_user.id
     res.approved_at = db.func.now()
-    db.session.add(ResultApprovalHistory(
-        result_id=res.id,
-        action='approved',
-        note='Approved by admin',
-        acted_by=current_user.id
-    ))
+    rah = ResultApprovalHistory()
+    rah.result_id = res.id
+    rah.action = 'approved'
+    rah.note = 'Approved by admin'
+    rah.acted_by = current_user.id
+    db.session.add(rah)
     if res.course and res.course.lecturer_id:
-        db.session.add(Notification(
-            user_id=res.course.lecturer_id,
-            message=f"Result approved for {res.course.code} ({res.student.matric_no})",
-            link=url_for('lecturer.course_results', course_id=res.course.id)
-        ))
+        n = Notification()
+        n.user_id = res.course.lecturer_id
+        n.message = f"Result approved for {res.course.code} ({res.student.matric_no})"
+        n.link = url_for('lecturer.course_results', course_id=res.course.id)
+        db.session.add(n)
     db.session.commit()
     flash('Result approved.', 'success')
     return redirect(request.referrer or url_for('admin.result_requests'))
@@ -409,18 +414,18 @@ def reject_result(result_id):
     res.rejection_reason = note
     res.approved_by = current_user.id
     res.approved_at = db.func.now()
-    db.session.add(ResultApprovalHistory(
-        result_id=res.id,
-        action='rejected',
-        note=note,
-        acted_by=current_user.id
-    ))
+    rah = ResultApprovalHistory()
+    rah.result_id = res.id
+    rah.action = 'rejected'
+    rah.note = note
+    rah.acted_by = current_user.id
+    db.session.add(rah)
     if res.course and res.course.lecturer_id:
-        db.session.add(Notification(
-            user_id=res.course.lecturer_id,
-            message=f"Result rejected for {res.course.code} ({res.student.matric_no}). Reason: {note}",
-            link=url_for('lecturer.course_results', course_id=res.course.id)
-        ))
+        n = Notification()
+        n.user_id = res.course.lecturer_id
+        n.message = f"Result rejected for {res.course.code} ({res.student.matric_no}). Reason: {note}"
+        n.link = url_for('lecturer.course_results', course_id=res.course.id)
+        db.session.add(n)
     db.session.commit()
     flash('Result rejected and sent back to lecturer.', 'warning')
     return redirect(request.referrer or url_for('admin.result_requests'))
@@ -455,7 +460,8 @@ def assign_advisor():
 
     for error in form.errors.values():
         if error:
-            flash(error[0], 'danger')
+            msg = error[0] if isinstance(error, (list, tuple)) and len(error) > 0 else str(error)
+            flash(str(msg), 'danger')
             break
     return redirect(url_for('admin.user_list'))
 
@@ -469,12 +475,11 @@ def request_advisor_student_list():
     form.advisor_id.choices = [(u.id, u.username) for u in advisors]
 
     if form.validate_on_submit():
-        req = AdvisorStudentListRequest(
-            admin_id=current_user.id,
-            advisor_id=form.advisor_id.data,
-            status='pending',
-            note=(form.note.data or '').strip() or None
-        )
+        req = AdvisorStudentListRequest()
+        req.admin_id = current_user.id
+        req.advisor_id = form.advisor_id.data
+        req.status = 'pending'
+        req.note = (form.note.data or '').strip() or None
         db.session.add(req)
         db.session.commit()
         flash('Request sent to advisor.', 'success')

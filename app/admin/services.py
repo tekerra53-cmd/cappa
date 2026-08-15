@@ -15,7 +15,11 @@ def create_user(username, email, password, role):
     if User.query.filter_by(email=email).first():
         raise ValueError('Email already exists')
 
-    u = User(username=username, email=email, role=role)
+    # Construct the model without calling a positional/keyword init (helps static analyzers)
+    u = User()
+    u.username = username
+    u.email = email
+    u.role = role
     u.set_password(password)
     db.session.add(u)
     db.session.commit()
@@ -28,7 +32,13 @@ def create_user(username, email, password, role):
 def create_course(code, title, unit, semester, level, lecturer_id):
     if Course.query.filter_by(code=code).first():
         raise ValueError('Course code already exists')
-    c = Course(code=code, title=title, unit=unit, semester=semester, level=level, lecturer_id=lecturer_id)
+    c = Course()
+    c.code = code
+    c.title = title
+    c.unit = unit
+    c.semester = semester
+    c.level = level
+    c.lecturer_id = lecturer_id
     db.session.add(c)
     db.session.commit()
     return c
@@ -37,7 +47,9 @@ def create_course(code, title, unit, semester, level, lecturer_id):
 def create_session(name):
     if AcademicSession.query.filter_by(name=name).first():
         raise ValueError('Session exists')
-    s = AcademicSession(name=name, is_active=False)
+    s = AcademicSession()
+    s.name = name
+    s.is_active = False
     db.session.add(s)
     db.session.commit()
     return s
@@ -46,13 +58,16 @@ def create_session(name):
 def activate_session(session_id):
     AcademicSession.query.update({AcademicSession.is_active: False})
     s = AcademicSession.query.get(session_id)
+    if not s:
+        raise ValueError('Session not found')
     s.is_active = True
     approved_requests = ResitRequest.query.filter_by(status='approved', enrolled_session_id=None).all()
     for req in approved_requests:
         existing = Enrollment.query.filter_by(student_id=req.student_id, course_id=req.course_id).first()
         if not existing:
-            db.session.add(Enrollment(student_id=req.student_id, course_id=req.course_id))
+            db.session.add(Enrollment(req.student_id, req.course_id))
         req.status = 'enrolled'
+        # ensure s is present (checked above)
         req.enrolled_session_id = s.id
     db.session.commit()
     return s
