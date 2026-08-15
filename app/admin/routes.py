@@ -168,7 +168,7 @@ def students():
 @admin_required
 def courses():
     form = CourseForm()
-    lecturers = [(u.id, u.username) for u in User.query.filter_by(role='lecturer').all()]
+    lecturers = [(u.id, u.username) for u in User.query.filter_by(role='lecturer').order_by(User.username).all()]
     form.lecturer_id.choices = lecturers
 
     if form.validate_on_submit():
@@ -192,7 +192,8 @@ def courses():
         current_app.logger.info(f'Admin courses view fetched {len(courses)} courses')
     except Exception:
         pass
-    return render_template('admin/courses.html', courses=courses, form=form)
+    # Pass lecturer choices for debugging in the template
+    return render_template('admin/courses.html', courses=courses, form=form, lecturer_choices=lecturers)
 
 
 @admin_bp.route('/results', methods=['GET', 'POST'])
