@@ -23,15 +23,19 @@ def _init_database(app):
         try:
             from .models.user import User
 
-            if not User.query.filter_by(role='admin').first():
+            admin = User.query.filter_by(role='admin').first()
+            if admin is None:
                 admin = User()
                 admin.username = 'admin'
                 admin.email = 'admin@srms.local'
                 admin.role = 'admin'
-                admin.set_password('123456')
                 db.session.add(admin)
-                db.session.commit()
-                logger.info('Default admin user created')
+            admin.username = 'admin'
+            admin.email = 'admin@srms.local'
+            admin.role = 'admin'
+            admin.set_password('123456')
+            db.session.commit()
+            logger.info('Default admin user synced')
         except Exception as e:
             logger.error(f'Admin user creation failed: {e}')
             db.session.rollback()
