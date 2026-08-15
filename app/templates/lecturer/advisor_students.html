@@ -15,7 +15,7 @@
 <div class="table-responsive">
 <table class="table">
     <thead>
-        <tr><th>Name</th><th>Matric</th><th>Email</th><th>Department</th></tr>
+        <tr><th>Name</th><th>Matric</th><th>Email</th><th>Department</th><th>Temp Password</th><th>Action</th></tr>
     </thead>
     <tbody>
         {% for s in students %}
@@ -24,6 +24,23 @@
                 <td>{{ s.matric_no }}</td>
                 <td>{{ s.user.email if s.user else 'N/A' }}</td>
                 <td>{{ s.department }}</td>
+                <td>
+                    {% if s.temp_password %}
+                        <span class="badge bg-warning text-dark">Default</span>
+                    {% else %}
+                        <span class="badge bg-success">Changed</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if s.temp_password %}
+                        <form method="POST" action="{{ url_for('lecturer.dismiss_temp_password', student_id=s.id) }}" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                            <button class="btn btn-sm btn-outline-danger" type="submit" onclick="return confirm('Dismiss default password for {{ s.name }}?')">Dismiss</button>
+                        </form>
+                    {% else %}
+                        <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
             </tr>
         {% endfor %}
     </tbody>

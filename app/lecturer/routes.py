@@ -425,6 +425,22 @@ def create_student_route():
     return render_template('lecturer/create_student.html', form=form, level=current_user.advisor_level)
 
 
+@lecturer_bp.route('/advisor/students/<int:student_id>/dismiss-temp-password', methods=['POST'])
+@login_required
+@advisor_required
+def dismiss_temp_password(student_id):
+    student = Student.query.get_or_404(student_id)
+    if student.level != current_user.advisor_level:
+        flash('Not authorized for this student.', 'danger')
+        return redirect(url_for('lecturer.advisor_students'))
+    if student.user:
+        student.user.force_password_change = False
+    student.temp_password = None
+    db.session.commit()
+    flash(f'Default password dismissed for {student.name}.', 'success')
+    return redirect(url_for('lecturer.advisor_students'))
+
+
 @lecturer_bp.route('/advisor/students')
 @login_required
 @advisor_required

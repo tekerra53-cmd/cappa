@@ -76,8 +76,7 @@ def create_student(name, matric_no, department, level, email=None, initial_passw
     student_user = User(
         username=username,
         email=email or f'{username}@srms.local',
-        role='student',
-        force_password_change=True
+        role='student'
     )
 
     import string
