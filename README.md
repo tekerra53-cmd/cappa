@@ -73,6 +73,16 @@ run.py                      # App entry point
 - **Admin**: admin / 123456
 - **Lecturers/Students**: Any generated username / 123456
 
+## Reset Admin Password
+Use the helper script to resync the admin account against the active database:
+```bash
+python tools/reset_admin.py
+```
+Optional:
+```bash
+python tools/reset_admin.py --password 'YourNewPassword123!'
+```
+
 ## Endpoints
 - `/` -> redirects based on role
 - `/login`, `/logout`
