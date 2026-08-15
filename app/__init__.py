@@ -20,6 +20,14 @@ def _init_database(app):
             logger.error(f'Database create_all failed: {e}')
             return
 
+        if os.environ.get('VERCEL'):
+            try:
+                from flask_migrate import upgrade
+                upgrade()
+                logger.info('Database migrations applied on Vercel')
+            except Exception as e:
+                logger.error(f'Database migration failed on Vercel: {e}')
+
         try:
             from .models.user import User
 
@@ -28,13 +36,14 @@ def _init_database(app):
                 admin = User()
                 admin.username = 'admin'
                 admin.email = 'admin@srms.local'
+                admin.role = 'admin'
                 db.session.add(admin)
-            admin.username = 'admin'
-            admin.email = 'admin@srms.local'
-            admin.role = 'admin'
-            admin.set_password('123456')
-            db.session.commit()
-            logger.info('Default admin user synced')
+                db.session.flush()
+                admin.set_password('123456')
+                db.session.commit()
+                logger.info('Default admin user created')
+            else:
+                logger.info('Default admin user already exists')
         except Exception as e:
             logger.error(f'Admin user creation failed: {e}')
             db.session.rollback()
