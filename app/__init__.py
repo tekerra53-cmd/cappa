@@ -1,7 +1,7 @@
 import os
 import logging
 
-from flask import Flask, redirect, url_for, jsonify
+from flask import Flask, redirect, url_for, jsonify, render_template
 from .config import Config
 from .extensions import db, migrate, login_manager, csrf
 
@@ -106,7 +106,7 @@ def create_app(config_class=Config):
                 return redirect(url_for('lecturer.dashboard'))
             if current_user.role == 'student':
                 return redirect(url_for('student.dashboard'))
-        return redirect(url_for('auth.login'))
+        return render_template('home/index.html')
 
     logger.info('App initialization complete')
     return app
