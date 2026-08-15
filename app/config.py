@@ -29,6 +29,9 @@ def _resolve_db_path():
             db_path = (BASE_DIR / db_path).resolve()
         return db_path
 
+    if os.environ.get('POSTGRES_URL'):
+        return None
+
     if os.environ.get('VERCEL') or os.environ.get('RENDER') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'):
         return SERVERLESS_DB_PATH
 
@@ -36,6 +39,13 @@ def _resolve_db_path():
 
 
 def _build_sqlalchemy_uri(database_url):
+    vercel_db = os.environ.get('POSTGRES_URL', '').strip()
+    if vercel_db:
+        return vercel_db
+
+    if not database_url:
+        return f'sqlite:///{(INSTANCE_DIR / "app.db").resolve().as_posix()}'
+
     if database_url.startswith('sqlite:///'):
         sqlite_path = database_url[len('sqlite:///'):]
         if not sqlite_path:
@@ -61,6 +71,10 @@ if os.environ.get('DATABASE_URL', '').startswith('sqlite:///'):
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-string')
     DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
-    SQLALCHEMY_DATABASE_URI = _build_sqlalchemy_uri(DATABASE_URL or f'sqlite:///{DB_PATH.as_posix()}')
+    POSTGRES_URL = os.environ.get('POSTGRES_URL', '').strip()
+    if POSTGRES_URL:
+        SQLALCHEMY_DATABASE_URI = POSTGRES_URL
+    else:
+        SQLALCHEMY_DATABASE_URI = _build_sqlalchemy_uri(DATABASE_URL or f'sqlite:///{DB_PATH.as_posix()}')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     FLASK_ENV = os.environ.get('FLASK_ENV', 'development')

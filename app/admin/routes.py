@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, send_file, current_app
+from flask import Blueprint, render_template, redirect, url_for, flash, request, send_file, current_app, make_response
 from flask_login import login_required, current_user
 from sqlalchemy import or_
 from ..models.user import User
@@ -70,7 +70,11 @@ def user_list():
     advisor_form = AdvisorAssignForm()
     lecturers = User.query.filter(User.role.ilike('%lecturer%')).order_by(User.username).all()
     advisor_form.lecturer_id.choices = [(u.id, u.username) for u in lecturers]
-    return render_template('admin/users.html', users=users, form=form, advisor_form=advisor_form, search_query=search_query)
+    resp = make_response(render_template('admin/users.html', users=users, form=form, advisor_form=advisor_form, search_query=search_query))
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Expires'] = '0'
+    return resp
 
 
 @admin_bp.route('/students', methods=['GET', 'POST'])
@@ -193,12 +197,16 @@ def courses():
         current_app.logger.info(f'Admin courses view fetched {len(courses)} courses')
     except Exception:
         pass
-    return render_template(
+    resp = make_response(render_template(
         'admin/courses.html',
         courses=courses,
         form=form,
         lecturer_choices=lecturers
-    )
+    ))
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Expires'] = '0'
+    return resp
 
 
 @admin_bp.route('/results', methods=['GET', 'POST'])
