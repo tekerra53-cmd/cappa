@@ -41,10 +41,13 @@ def _resolve_db_path():
 def _build_sqlalchemy_uri(database_url):
     vercel_db = os.environ.get('POSTGRES_URL', '').strip()
     if vercel_db:
-        return vercel_db
+        database_url = vercel_db
 
     if not database_url:
         return f'sqlite:///{(INSTANCE_DIR / "app.db").resolve().as_posix()}'
+
+    if database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
 
     if database_url.startswith('sqlite:///'):
         sqlite_path = database_url[len('sqlite:///'):]
@@ -73,7 +76,7 @@ class Config:
     DATABASE_URL = os.environ.get('DATABASE_URL', '').strip()
     POSTGRES_URL = os.environ.get('POSTGRES_URL', '').strip()
     if POSTGRES_URL:
-        SQLALCHEMY_DATABASE_URI = POSTGRES_URL
+        SQLALCHEMY_DATABASE_URI = _build_sqlalchemy_uri(POSTGRES_URL)
     else:
         SQLALCHEMY_DATABASE_URI = _build_sqlalchemy_uri(DATABASE_URL or f'sqlite:///{DB_PATH.as_posix()}')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
