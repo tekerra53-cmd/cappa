@@ -64,11 +64,11 @@ def _build_sqlalchemy_uri(database_url):
         return f'sqlite:///{db_path.as_posix()}'
 
     if database_url.startswith('postgresql://'):
-        parsed = urllib.parse.urlparse(database_url)
-        valid_params = urllib.parse.parse_qsl(parsed.query)
+        parsed = urlparse(database_url)
+        valid_params = parse_qsl(parsed.query)
         cleaned_params = [(k, v) for k, v in valid_params if k.lower() not in {'supa', 'supabase', 'pooler', 'x'}]
-        cleaned_query = urllib.parse.urlencode(cleaned_params)
-        database_url = urllib.parse.urlunparse(parsed._replace(query=cleaned_query))
+        cleaned_query = urlencode(cleaned_params)
+        database_url = urlunparse(parsed._replace(query=cleaned_query))
 
     return database_url
 
