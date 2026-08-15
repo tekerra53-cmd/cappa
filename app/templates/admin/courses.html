@@ -16,6 +16,9 @@
     <div class="small text-muted">
         {% for id,label in lecturer_choices %}{{ id }}: {{ label }}{% if not loop.last %}, {% endif %}{% endfor %}
     </div>
+    <div class="small text-muted mt-1">
+        <strong>Total lecturers:</strong> {{ lecturer_count }} &nbsp;|&nbsp; <strong>Newest IDs:</strong> {{ newest_lecturer_ids }}
+    </div>
 </div>
 <table class="table mt-3"><thead><tr><th>Code</th><th>Title</th><th>Unit</th><th>Semester</th><th>Level</th><th>Lecturer</th></tr></thead><tbody>{% for c in courses %}<tr><td>{{ c.code }}</td><td>{{ c.title }}</td><td>{{ c.unit }}</td><td>{{ c.semester }}</td><td>{{ c.level }}</td><td>{{ c.lecturer.username if c.lecturer else 'Unassigned' }}</td></tr>{% endfor %}</tbody></table>
 {% endblock %}
