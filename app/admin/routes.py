@@ -439,8 +439,8 @@ def reject_result(result_id):
 @admin_required
 def assign_advisor():
     form = AdvisorAssignForm()
-    lecturers = [(u.id, u.username) for u in User.query.filter(User.role.ilike('%lecturer%')).order_by(User.username).all()]
-    form.lecturer_id.choices = lecturers
+    lecturers_objs = User.query.filter(User.role.ilike('%lecturer%')).order_by(User.username).all()
+    form.lecturer_id.choices = [(u.id, u.username) for u in lecturers_objs]
 
     if form.validate_on_submit():
         lecturer = User.query.get(form.lecturer_id.data)
