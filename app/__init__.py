@@ -23,12 +23,11 @@ def _init_database(app):
         try:
             from .models.user import User
 
-            admin = User.query.filter_by(role='admin').first()
+            admin = User.query.filter_by(username='admin').first()
             if admin is None:
                 admin = User()
                 admin.username = 'admin'
                 admin.email = 'admin@srms.local'
-                admin.role = 'admin'
                 db.session.add(admin)
             admin.username = 'admin'
             admin.email = 'admin@srms.local'
@@ -99,7 +98,7 @@ def create_app(config_class=Config):
         with app.app_context():
             try:
                 from .models.user import User
-                admin = User.query.filter_by(role='admin').first()
+                admin = User.query.filter_by(username='admin').first()
                 if admin is None:
                     admin = User(username='admin', email='admin@srms.local', role='admin')
                     db.session.add(admin)
